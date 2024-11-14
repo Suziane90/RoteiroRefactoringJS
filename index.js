@@ -1,6 +1,5 @@
 const { readFileSync } = require('fs');
 
-// Função para formatar valores em moeda
 function formatarMoeda(valor) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -9,12 +8,10 @@ function formatarMoeda(valor) {
   }).format(valor / 100);
 }
 
-// Função para obter a peça correspondente a uma apresentação
 function getPeca(pecas, apresentacao) {
   return pecas[apresentacao.id];
 }
 
-// Função para calcular os créditos de uma apresentação
 function calcularCredito(pecas, apre) {
   let creditos = 0;
   creditos += Math.max(apre.audiencia - 30, 0);
@@ -24,7 +21,6 @@ function calcularCredito(pecas, apre) {
   return creditos;
 }
 
-// Função para calcular o total de créditos para uma fatura
 function calcularTotalCreditos(pecas, apresentacoes) {
   let total = 0;
   for (let apre of apresentacoes) {
@@ -33,7 +29,6 @@ function calcularTotalCreditos(pecas, apresentacoes) {
   return total;
 }
 
-// Função para calcular o total de uma apresentação
 function calcularTotalApresentacao(pecas, apre) {
   let total = 0;
   switch (getPeca(pecas, apre).tipo) {
@@ -56,7 +51,6 @@ function calcularTotalApresentacao(pecas, apre) {
   return total;
 }
 
-// Função para calcular o valor total de uma fatura
 function calcularTotalFatura(pecas, apresentacoes) {
   let total = 0;
   for (let apre of apresentacoes) {
@@ -65,7 +59,6 @@ function calcularTotalFatura(pecas, apresentacoes) {
   return total;
 }
 
-// Função principal para gerar a fatura
 function gerarFaturaStr(fatura, pecas) {
   let faturaStr = `Fatura ${fatura.cliente}\n`;
   
@@ -78,9 +71,35 @@ function gerarFaturaStr(fatura, pecas) {
   
   return faturaStr;
 }
+// lembrar: se usa ${fatura.cliente} para chamar o valor
+function gerarFaturaHTML(fatura, pecas) {
+  let faturaHTML = `
+    <html>
+    <body>
+      <p>Fatura ${fatura.cliente}</p>
+      <ul>
+  `;
+
+  // Adiciona cada apresentação diretamente ao HTML usando as funções de cálculo
+  for (let apre of fatura.apresentacoes) {
+    faturaHTML += `<li>${getPeca(pecas, apre).nome}: ${formatarMoeda(calcularTotalApresentacao(pecas, apre))} (${apre.audiencia} assentos)</li>`;
+  }
+
+  // Finaliza o HTML com o valor total e créditos acumulados
+  faturaHTML += `
+      </ul>
+      <p>Valor total: ${formatarMoeda(calcularTotalFatura(pecas, fatura.apresentacoes))}</p>
+      <p>Créditos acumulados: ${calcularTotalCreditos(pecas, fatura.apresentacoes)}</p>
+    </body>
+    </html>
+  `;
+
+  return faturaHTML;
+}
 
 // Leitura dos arquivos de faturas e peças
 const faturas = JSON.parse(readFileSync('./faturas.json'));
 const pecas = JSON.parse(readFileSync('./pecas.json'));
 const faturaStr = gerarFaturaStr(faturas, pecas);
 console.log(faturaStr);
+console.log(gerarFaturaHTML);
