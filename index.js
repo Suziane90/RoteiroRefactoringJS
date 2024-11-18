@@ -13,20 +13,20 @@ function getPeca(pecas, apresentacao) {
 }
 
 
-function gerarFaturaStr(fatura, pecas) {
+function gerarFaturaStr(fatura, pecas, calc) {
   let faturaStr = `Fatura ${fatura.cliente}\n`;
   
   for (let apre of fatura.apresentacoes) {
-    faturaStr += `  ${getPeca(pecas, apre).nome}: ${formatarMoeda(calcularTotalApresentacao(pecas, apre))} (${apre.audiencia} assentos)\n`;
+    faturaStr += `  ${getPeca(pecas, apre).nome}: ${formatarMoeda(calc.calcularTotalApresentacao(pecas, apre))} (${apre.audiencia} assentos)\n`;
   }
 
-  faturaStr += `Valor total: ${formatarMoeda(calcularTotalFatura(pecas, fatura.apresentacoes))}\n`;
-  faturaStr += `Créditos acumulados: ${calcularTotalCreditos(pecas, fatura.apresentacoes)} \n`;
+  faturaStr += `Valor total: ${formatarMoeda(calc.calcularTotalFatura(pecas, fatura.apresentacoes))}\n`;
+  faturaStr += `Créditos acumulados: ${calc.calcularTotalCreditos(pecas, fatura.apresentacoes)} \n`;
   
   return faturaStr;
 }
 // lembrar: se usa ${fatura.cliente} para chamar o valor
-function gerarFaturaHTML(fatura, pecas) {
+/*function gerarFaturaHTML(fatura, pecas) {
   let faturaHTML = `
     <html>
     <body>
@@ -48,10 +48,11 @@ function gerarFaturaHTML(fatura, pecas) {
   `;
 
   return faturaHTML;
-}
+}*/
 
 
 class ServicoCalculoFatura {
+  
   calcularCredito(pecas, apre) {
     let creditos = 0;
     creditos += Math.max(apre.audiencia - 30, 0);
@@ -64,7 +65,7 @@ class ServicoCalculoFatura {
   calcularTotalCreditos(pecas, apresentacoes) {
     let total = 0;
     for (let apre of apresentacoes) {
-      total += calcularCredito(pecas, apre);
+      total += this.calcularCredito(pecas, apre);
     }
     return total;
   }
@@ -100,10 +101,11 @@ class ServicoCalculoFatura {
   }
 
 }
+const calc = new ServicoCalculoFatura();
 
 // Leitura dos arquivos de faturas e peças
 const faturas = JSON.parse(readFileSync('./faturas.json'));
 const pecas = JSON.parse(readFileSync('./pecas.json'));
-const faturaStr = gerarFaturaStr(faturas, pecas);
+const faturaStr = gerarFaturaStr(faturas, pecas, calc);
 console.log(faturaStr);
-console.log(gerarFaturaHTML);
+//console.log(gerarFaturaHTML);
